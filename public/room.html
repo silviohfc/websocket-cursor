@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <script type="module">
+    import { io } from "https://cdn.socket.io/4.3.2/socket.io.esm.min.js"
+    const socket = io("http://localhost:3333/")
+
+    const url = new URL(window.location.href)
+    const name = url.searchParams.get('name')
+
+    function getRandomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    $(document).on('mousemove', event => {
+      event.preventDefault()
+      socket.emit('mouseMove', {
+        clientId: socket.id,
+        clientName: name,
+        x: event.pageX,
+        y: event.pageY
+      })
+    })
+
+    socket.on('drawMouse', coords => {
+      let cursor = document.querySelector(`#${coords.clientId}`)
+      
+      if (!cursor) {
+        const color = getRandomColor()
+        const spanName = document.createElement('span')
+        spanName.innerText = coords.clientName
+        spanName.style.color = color
+
+        cursor = document.createElement('div')
+        cursor.classList.add('cursor')
+        cursor.id = coords.clientId
+        cursor.style['border-color'] = `transparent transparent transparent ${color}`
+        
+        cursor.appendChild(spanName)
+        document.querySelector('body').appendChild(cursor)
+      }
+
+      cursor.style.left = `${coords.x}px`
+      cursor.style.top =  `${coords.y}px`
+
+    })
+  </script>
+</body>
+</html>
